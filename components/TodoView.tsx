@@ -12,18 +12,27 @@ interface TodoViewProps {
 export const TodoView: React.FC<TodoViewProps> = ({ todos, addTodo, toggleTodo, deleteTodo }) => {
   const [newTodoText, setNewTodoText] = useState('');
   const [newTodoDate, setNewTodoDate] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTodoText.trim()) return;
+    if (!newTodoText.trim() || isAdding) return;
 
-    addTodo({
-      text: newTodoText,
-      dueDate: newTodoDate || undefined,
-    });
+    setIsAdding(true);
+    try {
+      await addTodo({
+        text: newTodoText,
+        dueDate: newTodoDate || undefined,
+      });
 
-    setNewTodoText('');
-    setNewTodoDate('');
+      setNewTodoText('');
+      setNewTodoDate('');
+    } catch (error) {
+      console.error("Failed to add task:", error);
+      alert("There was an error adding your task. Please check your connection or Firebase setup and try again.");
+    } finally {
+      setIsAdding(false);
+    }
   };
   
   const incompleteTodos = todos.filter(t => !t.completed);
@@ -46,8 +55,12 @@ export const TodoView: React.FC<TodoViewProps> = ({ todos, addTodo, toggleTodo, 
           onChange={(e) => setNewTodoDate(e.target.value)}
           className="p-3 bg-gray-700 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
         />
-        <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          Add Task
+        <button
+          type="submit"
+          disabled={isAdding || !newTodoText.trim()}
+          className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-800 disabled:cursor-not-allowed"
+        >
+          {isAdding ? 'Adding...' : 'Add Task'}
         </button>
       </form>
       

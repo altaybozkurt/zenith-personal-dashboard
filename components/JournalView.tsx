@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { JournalEntry, Mood } from '../types';
+import { getJournalPrompt } from '../services/geminiService';
 
 interface JournalViewProps {
   entries: JournalEntry[];
@@ -9,6 +11,8 @@ interface JournalViewProps {
 export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEntry }) => {
   const [content, setContent] = useState('');
   const [selectedMood, setSelectedMood] = useState<Mood>(Mood.Neutral);
+  const [prompt, setPrompt] = useState('');
+  const [isPromptLoading, setIsPromptLoading] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
   const todaysEntry = entries.find(e => e.date === today);
@@ -23,11 +27,18 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEn
     };
     
     addOrUpdateEntry(entryData).then(() => {
-        // Clear form after successful save. 
-        // Note: we don't clear instantly in case of an error.
+        // Successful save
     });
   };
   
+  const handleGetPrompt = async () => {
+    setIsPromptLoading(true);
+    setPrompt('');
+    const newPrompt = await getJournalPrompt();
+    setPrompt(newPrompt);
+    setIsPromptLoading(false);
+  };
+
   useEffect(() => {
     if(todaysEntry) {
         setContent(todaysEntry.content);
@@ -48,6 +59,19 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEn
         <h2 className="text-xl font-semibold mb-4">
           {todaysEntry ? `Editing Entry for ${new Date(today + 'T00:00:00').toLocaleDateString()}` : `New Entry for ${new Date().toLocaleDateString()}`}
         </h2>
+        
+        {isPromptLoading && (
+            <div className="mb-4 p-4 bg-gray-700/50 border border-gray-600 rounded-lg">
+                <p className="text-indigo-300 italic">Finding some inspiration for you...</p>
+            </div>
+        )}
+        {prompt && !isPromptLoading && (
+          <div className="mb-4 p-4 bg-gray-700/50 border border-gray-600 rounded-lg cursor-pointer" onClick={() => setContent(prev => prev ? `${prev}\n\n${prompt}`: prompt)}>
+            <p className="text-indigo-300 italic">"{prompt}"</p>
+            <p className="text-xs text-gray-400 mt-2 text-right">Click to add to your entry</p>
+          </div>
+        )}
+
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -68,6 +92,13 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEn
             ))}
           </div>
           <div className="flex space-x-2">
+             <button
+              onClick={handleGetPrompt}
+              disabled={isPromptLoading}
+              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-800 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPromptLoading ? 'Getting...' : 'Get a Prompt'}
+            </button>
             <button
               onClick={handleSave}
               className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -90,7 +121,7 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEn
                     <p className="font-semibold text-lg text-white">
                       {new Date(entry.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
-                    <p className="text-gray-300 mt-2">{entry.content}</p>
+                    <p className="text-gray-300 mt-2 whitespace-pre-wrap">{entry.content}</p>
                   </div>
                   <span className="text-3xl ml-4">{entry.mood}</span>
                 </div>

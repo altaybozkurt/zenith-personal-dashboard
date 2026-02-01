@@ -31,17 +31,28 @@ export const getWeeklySummary = async (entries: JournalEntry[], todos: TodoItem[
   }
 
   const prompt = `
-    Based on the following journal entries and to-do items from the past week, generate a brief, insightful, and encouraging summary.
-    Focus on emotional trends, accomplishments (completed todos), and potential areas for reflection.
-    Format the output as clean markdown.
+    You are a friendly and insightful personal assistant. Your task is to analyze the user's journal entries and to-do list from the past 7 days and provide an encouraging, reflective weekly summary.
 
-    Journal Entries:
-    ${entries.map(e => `- Date: ${e.date}, Mood: ${e.mood}, Entry: "${e.content}"`).join('\n')}
+    **Analysis Instructions:**
+    1.  **Emotional Tone:** Look at the moods provided in the journal entries. Identify the dominant emotions or any significant shifts in mood throughout the week.
+    2.  **Key Themes:** Read the journal content. What are the recurring topics? Are they about work, relationships, personal growth, or challenges?
+    3.  **Productivity & Accomplishments:** Review the to-do list. Acknowledge the tasks that were completed.
+    4.  **Areas for Reflection:** Gently point out any patterns or provide a thoughtful question to encourage reflection for the week ahead.
 
-    To-Do Items:
-    ${todos.map(t => `- Task: "${t.text}", Completed: ${t.completed}`).join('\n')}
+    **Input Data:**
 
-    Summary:
+    **Journal Entries:**
+    ${entries.length > 0 ? entries.map(e => `- Date: ${e.date}, Mood: ${e.mood}, Content: "${e.content.substring(0, 150)}..."`).join('\n') : "No journal entries this week."}
+
+    **To-Do Items:**
+    ${todos.length > 0 ? todos.map(t => `- Task: "${t.text}", Status: ${t.completed ? "Completed" : "Pending"}`).join('\n') : "No to-do items tracked this week."}
+
+    **Output Format:**
+    - Use Markdown for formatting.
+    - Start with a friendly greeting.
+    - Use headings like "### Your Week's Vibe" for mood analysis, "### Key Accomplishments" for completed tasks, and "### A Thought for the Week Ahead".
+    - Keep the summary concise, positive, and insightful (around 3-4 short paragraphs).
+    - Do not just list the data back; synthesize it into a narrative.
   `;
 
   try {
