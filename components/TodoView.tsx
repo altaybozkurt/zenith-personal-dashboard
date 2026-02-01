@@ -1,14 +1,15 @@
-
 import React, { useState } from 'react';
 import { TodoItem } from '../types';
 import { TrashIcon } from './icons';
 
 interface TodoViewProps {
   todos: TodoItem[];
-  setTodos: React.Dispatch<React.SetStateAction<TodoItem[]>>;
+  addTodo: (todoData: { text: string; dueDate?: string }) => Promise<void>;
+  toggleTodo: (id: string, currentStatus: boolean) => Promise<void>;
+  deleteTodo: (id: string) => Promise<void>;
 }
 
-export const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos }) => {
+export const TodoView: React.FC<TodoViewProps> = ({ todos, addTodo, toggleTodo, deleteTodo }) => {
   const [newTodoText, setNewTodoText] = useState('');
   const [newTodoDate, setNewTodoDate] = useState('');
 
@@ -16,28 +17,13 @@ export const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos }) => {
     e.preventDefault();
     if (!newTodoText.trim()) return;
 
-    const newTodo: TodoItem = {
-      id: Date.now().toString(),
+    addTodo({
       text: newTodoText,
-      completed: false,
       dueDate: newTodoDate || undefined,
-    };
+    });
 
-    setTodos([...todos, newTodo]);
     setNewTodoText('');
     setNewTodoDate('');
-  };
-
-  const toggleTodo = (id: string) => {
-    setTodos(
-      todos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
-  };
-
-  const deleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
   };
   
   const incompleteTodos = todos.filter(t => !t.completed);
@@ -74,7 +60,7 @@ export const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos }) => {
                 <input
                 type="checkbox"
                 checked={todo.completed}
-                onChange={() => toggleTodo(todo.id)}
+                onChange={() => toggleTodo(todo.id, todo.completed)}
                 className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600"
                 />
                 <div className="ml-4 flex-grow">
@@ -105,7 +91,7 @@ export const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos }) => {
                 <input
                 type="checkbox"
                 checked={todo.completed}
-                onChange={() => toggleTodo(todo.id)}
+                onChange={() => toggleTodo(todo.id, todo.completed)}
                 className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-indigo-500 focus:ring-indigo-600"
                 />
                 <div className="ml-4 flex-grow">

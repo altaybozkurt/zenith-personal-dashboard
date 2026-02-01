@@ -1,4 +1,3 @@
-
 export enum Mood {
   Happy = '😊',
   Sad = '😢',
@@ -20,6 +19,7 @@ export interface TodoItem {
   text: string;
   completed: boolean;
   dueDate?: string; // YYYY-MM-DD
+  createdAt?: any; // Firestore ServerTimestamp for sorting
 }
 
 export type View = 'dashboard' | 'journal' | 'calendar' | 'todo';

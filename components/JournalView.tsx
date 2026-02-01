@@ -1,13 +1,12 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { JournalEntry, Mood } from '../types';
 
 interface JournalViewProps {
   entries: JournalEntry[];
-  setEntries: React.Dispatch<React.SetStateAction<JournalEntry[]>>;
+  addOrUpdateEntry: (entry: Omit<JournalEntry, 'id'>) => Promise<void>;
 }
 
-export const JournalView: React.FC<JournalViewProps> = ({ entries, setEntries }) => {
+export const JournalView: React.FC<JournalViewProps> = ({ entries, addOrUpdateEntry }) => {
   const [content, setContent] = useState('');
   const [selectedMood, setSelectedMood] = useState<Mood>(Mood.Neutral);
 
@@ -17,27 +16,19 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, setEntries })
   const handleSave = () => {
     if (!content.trim()) return;
 
-    const newEntry: JournalEntry = {
-      id: Date.now().toString(),
+    const entryData = {
       date: today,
       content,
       mood: selectedMood,
     };
     
-    // Check if there's already an entry for today to update it, otherwise add a new one.
-    const existingEntryIndex = entries.findIndex(e => e.date === today);
-    if (existingEntryIndex > -1) {
-        const updatedEntries = [...entries];
-        updatedEntries[existingEntryIndex] = { ...updatedEntries[existingEntryIndex], content, mood: selectedMood };
-        setEntries(updatedEntries);
-    } else {
-        setEntries([newEntry, ...entries]);
-    }
-    setContent('');
-    setSelectedMood(Mood.Neutral);
+    addOrUpdateEntry(entryData).then(() => {
+        // Clear form after successful save. 
+        // Note: we don't clear instantly in case of an error.
+    });
   };
   
-  React.useEffect(() => {
+  useEffect(() => {
     if(todaysEntry) {
         setContent(todaysEntry.content);
         setSelectedMood(todaysEntry.mood);
@@ -55,7 +46,7 @@ export const JournalView: React.FC<JournalViewProps> = ({ entries, setEntries })
       {/* New Entry Form */}
       <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
         <h2 className="text-xl font-semibold mb-4">
-          {todaysEntry ? `Editing Entry for ${new Date(today).toLocaleDateString()}` : `New Entry for ${new Date().toLocaleDateString()}`}
+          {todaysEntry ? `Editing Entry for ${new Date(today + 'T00:00:00').toLocaleDateString()}` : `New Entry for ${new Date().toLocaleDateString()}`}
         </h2>
         <textarea
           value={content}
